@@ -52,7 +52,7 @@ public class Outtake extends SubSystemGroup {
                 shooter.AutoSetVelocity(turret.distanceToGoal);
                 break;
             case FLYWHEEL_OFF:
-                shooter.setTargetVelocityRPM(400);
+                shooter.setTargetVelocity(400);
 
                 break;
         }
