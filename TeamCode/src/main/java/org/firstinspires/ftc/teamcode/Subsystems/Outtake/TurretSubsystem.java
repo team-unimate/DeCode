@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode.Subsystems.Outtake;
 
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,6 +15,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.core.controller.PIDFController;
 import org.firstinspires.ftc.teamcode.core.lib.Subsystem;
 
+import java.util.List;
+
 public class TurretSubsystem extends Subsystem {
     private CRServo servoT1;
     private CRServo servoT2;
@@ -19,6 +24,7 @@ public class TurretSubsystem extends Subsystem {
     private Telemetry telemetry;
     private IMU imu;
     private int setPoint = 0;
+    private Limelight3A limelight;
 
     private static final int TICKS_PER_REV = 8192;
     private static final double GEAR_RATIO = 170.0 / 50.0;
@@ -27,7 +33,7 @@ public class TurretSubsystem extends Subsystem {
     // 🔸 Distância da turret até o centro do robô (em polegadas)
     private double turretOffsetInches = 3; // ajuste conforme seu robô
 
-    Pose poseBot = new Pose(0,0,0);
+    Pose poseBot = new Pose(0, 0, 0);
     PIDFController pidf = new PIDFController(
             TurretConstants.kP,
             TurretConstants.kI,
@@ -62,13 +68,17 @@ public class TurretSubsystem extends Subsystem {
     double distanceToGoal = 0;
 
     public void AimTo(GOALS goal, Pose poseBot) {
+        double tx = 0;
+
         this.poseBot = poseBot;
         Pose target;
         switch (goal) {
             case RED_GOAL:
+                tx = getTagError(0);
                 target = poseRedGoal;
                 break;
             case BLUE_GOAL:
+                tx = getTagError(0);
                 target = poseBlueGoal;
                 break;
             default:
@@ -83,7 +93,8 @@ public class TurretSubsystem extends Subsystem {
 
         distanceToGoal = Math.sqrt(Math.pow(deltax, 2) + Math.pow(deltay, 2));
         double angle = Math.toDegrees(Math.atan2(deltay, deltax));
-
+        
+        SetAngleFC(angle + tx);
     }
 
     // 🔸 Retorna a pose da turret baseada na pose do robô e no deslocamento em polegadas
@@ -140,8 +151,21 @@ public class TurretSubsystem extends Subsystem {
         SetSetPoint(targetTicks);
     }
 
+    public double getTagError(int tagID) {
+        LLResult result = limelight.getLatestResult();
+        List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
+        double txResult = 0.0;
+        for (LLResultTypes.FiducialResult fr : fiducialResults) {
+            if (fr.getFiducialId() == tagID) {
+                txResult = fr.getTargetXDegrees();
+            }
+        }
+        return txResult;
+    }
+
     // angulo 0 = angulo virado pra frente na arena
     public void SetAngleFC(double desiredDegrees) {
+
         double robotHeading = Math.toDegrees(poseBot.getHeading());
         double turretTargetRel = desiredDegrees - robotHeading + 180;
         turretTargetRel = AngleUnit.normalizeDegrees(turretTargetRel);
