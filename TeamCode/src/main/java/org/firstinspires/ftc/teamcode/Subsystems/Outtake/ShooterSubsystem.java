@@ -13,7 +13,7 @@ public class ShooterSubsystem extends Subsystem {
     private DcMotorEx shooterMotor1;
     private Telemetry telemetry;
     ShooterLight light;
-    private VelocityPIDf velocityPID;
+    public VelocityPIDf velocityPID;
     VoltageSensor voltageSensor;
     InterpLUT lut = new InterpLUT();
 

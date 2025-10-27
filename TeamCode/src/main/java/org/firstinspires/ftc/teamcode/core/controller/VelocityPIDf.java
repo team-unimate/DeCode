@@ -9,8 +9,10 @@ public class VelocityPIDf {
     private double velocitySetpoint = 0;
     private double tolerance = 1e-2;
     private double batteryVoltage = 12.0; // tensão nominal padrão
-
-    public VelocityPIDf(double kP, double kI, double kD, double kV) {
+    public void SetP(double p){
+        this.kP = p;
+    }
+        public VelocityPIDf(double kP, double kI, double kD, double kV) {
         this.kP = kP;
         this.kI = kI;
         this.kD = kD;
