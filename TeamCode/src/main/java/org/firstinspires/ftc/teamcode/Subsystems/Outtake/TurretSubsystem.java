@@ -33,7 +33,7 @@ public class TurretSubsystem extends Subsystem {
 
     private int setPoint = 0;
     private double turretOffsetInches = 3;
-    private double distanceToGoal = 0;
+    public double distanceToGoal = 0;
 
     private Patterns pattern = null;
     private Pose poseBot = new Pose(0, 0, 0);
@@ -58,7 +58,7 @@ public class TurretSubsystem extends Subsystem {
     @Override
     public void Init(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
-
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
         imu = hardwareMap.get(IMU.class, TurretConstants.HMIMU);
         IMU.Parameters parameters = new IMU.Parameters(
                 new RevHubOrientationOnRobot(
@@ -67,6 +67,9 @@ public class TurretSubsystem extends Subsystem {
                 )
         );
         imu.initialize(parameters);
+
+        limelight.pipelineSwitch(0);
+        limelight.start();
 
         servoT1 = hardwareMap.get(CRServo.class, TurretConstants.HMServoTurret1);
         servoT2 = hardwareMap.get(CRServo.class, TurretConstants.HMServoTurret2);
@@ -106,14 +109,14 @@ public class TurretSubsystem extends Subsystem {
                 throw new IllegalStateException("Unexpected value: " + goal);
         }
 
-        Pose turretPose = getTurretPose(poseBot);
+        Pose turretPose = (poseBot);
         double deltaX = target.getX() - turretPose.getX();
         double deltaY = target.getY() - turretPose.getY();
 
         distanceToGoal = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
         double angle = Math.toDegrees(Math.atan2(deltaY, deltaX));
 
-        SetAngleFC(angle + tx);
+        SetAngleFC(angle -tx);
     }
 
     private Pose getTurretPose(Pose botPose) {
@@ -163,6 +166,8 @@ public class TurretSubsystem extends Subsystem {
         int targetTicks = (int) ((safeAngle / 360.0) * TOTAL_TICKS_PER_REV);
         SetSetPoint(targetTicks);
     }
+    private double filteredTx = 0;
+    private static final double txLerpFactor = 0.2; // 0 < fator < 1, menor = mais suave
 
     public double getTagError(int tagID) {
         LLResult result = limelight.getLatestResult();
@@ -170,28 +175,29 @@ public class TurretSubsystem extends Subsystem {
         double txResult = 0.0;
 
         for (LLResultTypes.FiducialResult fr : fiducialResults) {
-                if (fr.getFiducialId()==21){
-                    pattern = Patterns.GPP;
-                } else if (fr.getFiducialId()==22){
-                    pattern = Patterns.PGP;
-                } else if (fr.getFiducialId()==23){
-                    pattern = Patterns.PPG;
-                }
+            if (fr.getFiducialId() == 21) pattern = Patterns.GPP;
+            else if (fr.getFiducialId() == 22) pattern = Patterns.PGP;
+            else if (fr.getFiducialId() == 23) pattern = Patterns.PPG;
 
             if (fr.getFiducialId() == tagID) {
                 txResult = fr.getTargetXDegrees();
             }
         }
 
-        return txResult;
+        // LERP: filteredTx = lerp(previous, current, factor)
+        filteredTx = filteredTx + txLerpFactor * (txResult - filteredTx);
+
+        lastTxResult = filteredTx;
+        return filteredTx;
     }
+
 
     public void SetAngleFC(double desiredDegrees) {
         double robotHeading = Math.toDegrees(poseBot.getHeading());
         double turretTargetRel = AngleUnit.normalizeDegrees(desiredDegrees - robotHeading + 180);
         SetAngle(-turretTargetRel);
     }
-
+    public double lastTxResult = 0;
     @Override
     public void Periodic() {
         double currentPos = encoder.getCurrentPosition();

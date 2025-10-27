@@ -16,7 +16,13 @@ public class ShooterSubsystem extends Subsystem {
     public VelocityPIDf velocityPID;
     VoltageSensor voltageSensor;
     InterpLUT lut = new InterpLUT();
+    public ShooterSubsystem(){
 
+        lut.add(58, 890);
+        lut.add(145, 1200);
+        lut.createLUT();
+
+    }
 
     private double speedTolerance = 30; // RPM tolerância para "está na velocidade"
     private boolean isAtSpeed = false;
@@ -29,9 +35,6 @@ public class ShooterSubsystem extends Subsystem {
 
     @Override
     public void Init(HardwareMap hardwareMap, Telemetry telemetry) {
-        lut.add(58, 890);
-        lut.add(145, 1200);
-        lut.createLUT();
 
         shooterMotor1 = hardwareMap.get(DcMotorEx.class, ShooterConstants.HMShooterMotor);
         shooterMotor1.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER );

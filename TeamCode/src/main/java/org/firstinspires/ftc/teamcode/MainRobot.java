@@ -67,6 +67,7 @@ public class MainRobot extends Robot {
             intakeDexer.IntakeThreeMode();
         }
         telemetry.addData("INTAKEDEXER STATE: ", intakeDexer.currentState);
+        telemetry.addData("Last tx: ", outtake.turret.lastTxResult);
         telemetry.update();
 
     }
