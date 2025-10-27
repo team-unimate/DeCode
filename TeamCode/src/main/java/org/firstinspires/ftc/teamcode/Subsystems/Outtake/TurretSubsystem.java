@@ -53,12 +53,12 @@ public class TurretSubsystem extends Subsystem {
 
     public enum GOALS {
         RED_GOAL,
-        BLUE_GOAL
+        BLUE_GOAL,
+        MOTIF
     }
 
     Pose poseRedGoal = new Pose(155, 155, 0);
     Pose poseBlueGoal = new Pose(0, 135, 0);
-
     double distanceToGoal = 0;
 
     public void AimTo(GOALS goal, Pose poseBot) {
@@ -84,7 +84,6 @@ public class TurretSubsystem extends Subsystem {
         distanceToGoal = Math.sqrt(Math.pow(deltax, 2) + Math.pow(deltay, 2));
         double angle = Math.toDegrees(Math.atan2(deltay, deltax));
 
-        SetAngleFC(angle);
     }
 
     // 🔸 Retorna a pose da turret baseada na pose do robô e no deslocamento em polegadas

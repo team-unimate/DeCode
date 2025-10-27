@@ -38,6 +38,7 @@ public class TurretConfigurationFile extends LinearOpMode {
             dt.DriveTeleOp(gamepad1);
             sh.Periodic();
             tu.AimTo(TurretSubsystem.GOALS.BLUE_GOAL, dt.getFollower().getPose());
+
             tu.Periodic();
 
             velocity += gamepad1.left_stick_y * 0.1;
