@@ -16,7 +16,7 @@ public class SpindexerSubsystem extends Subsystem {
 
     private long lastTimeOutsideTolerance = 0; // último momento em que saiu da tolerância
     private static final int STABLE_TIME_MS = 150; // tempo necessário estável (ex: 300ms)
-    private static final int TOLERANCE_TICKS = 150;
+    private static final int TOLERANCE_TICKS = 250;
 
     public enum POSITIONS {
         INTAKE,

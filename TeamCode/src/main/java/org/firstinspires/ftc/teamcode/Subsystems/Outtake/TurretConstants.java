@@ -12,6 +12,6 @@ public class TurretConstants {
     public static double robotOffset = 0; //Centimetros
     public static double maximumLimit = 0;
     public static double minimumLimit = 0;
-    public static double stabilizedTolerance = 600;
+    public static double stabilizedTolerance = 300;
 
 }

@@ -73,7 +73,7 @@ public class GoalSideAuto extends OpMode {
             case SPIN_TO_FIRST_ROW:
                 if (!follower.isBusy()) {
                     follower.followPath(goalSidePaths.IntakeFirstRow);
-                    follower.setMaxPower(0.4);
+                    follower.setMaxPower(0.350);
                     setState(AutoState.INTAKE_FIRST_ROW);
                 }
                 break;
@@ -93,7 +93,7 @@ public class GoalSideAuto extends OpMode {
             case SHOOT_TO_SECOND_ROW:
                 if (!follower.isBusy()) {
                     follower.followPath(goalSidePaths.IntakeSecondRow);
-                    follower.setMaxPower(0.4);
+                    follower.setMaxPower(0.350);
                     setState(AutoState.INTAKE_SECOND_ROW);
                 }
                 break;
@@ -113,7 +113,7 @@ public class GoalSideAuto extends OpMode {
             case SHOOT_TO_THIRD_ROW:
                 if (!follower.isBusy()) {
                     follower.followPath(goalSidePaths.IntakeThirdRow);
-                    follower.setMaxPower(0.4);
+                    follower.setMaxPower(0.350);
                     setState(AutoState.INTAKE_THIRD_ROW);
                 }
                 break;
@@ -169,27 +169,23 @@ public class GoalSideAuto extends OpMode {
      * @param nextState próximo estado após disparar
      * @return true se o disparo está em andamento ou acabou de ser completado (para evitar duplo avanço)
      */
-    private boolean handleShootAndContinue(PathChain nextPath, AutoState nextState) {
-        double timeout = 5.0; // segurança: se algo travar por mais de 5s, continua mesmo assim
+    private boolean handleShootAndContinue(PathChain nextPath, AutoState nextState)
+    { double timeout = 8.0; // segurança: se algo travar por mais de 5s, continua mesmo assim
 
         // Disparar uma vez
-        if (!calledForceShoot && !follower.isBusy()) {
-            mainRobot.ForceShoot();
-            calledForceShoot = true;
-            resetStateTimer();
-            return true;
-        }
-
-        // Esperar disparo terminar
-        if (calledForceShoot && (mainRobot.isShootingDone() || timeSinceStateStart() > timeout)) {
-            follower.followPath(nextPath);
-            setState(nextState);
-            calledForceShoot = false;
-            return true;
-        }
-
-        return false;
-    }
+         if (!calledForceShoot && !follower.isBusy()) { mainRobot.ForceShoot();
+             calledForceShoot = true;
+             resetStateTimer();
+             return true; }
+         // Esperar disparo terminar
+            if (calledForceShoot && (mainRobot.isShootingDone() || timeSinceStateStart() > timeout)) {
+                follower.followPath(nextPath);
+                setState(nextState);
+                calledForceShoot = false;
+                return true;
+            }
+            return false;
+         }
 
     /** Reinicia o temporizador de estado */
     private void resetStateTimer() {

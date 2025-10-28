@@ -26,12 +26,12 @@ public class GoalSidePaths {
 
     public Pose p_Start = new Pose(35.090, 132.823, Math.toRadians(-90));
     public Pose p_Spin = new Pose(61.603, 86.296, Math.toRadians(-90));
-    public Pose p_FirstRowEntry = new Pose(48.5, 78.3, Math.toRadians(180-10));
-    public Pose p_FirstRowIntake = new Pose(21, 78.3, Math.toRadians(180-10));
-    public Pose p_SecondRowEntry = new Pose(47.567, 59.523, Math.toRadians(180));
-    public Pose p_SecondRowIntake = new Pose(15, 56.664, Math.toRadians(180));
-    public Pose p_ThirdRowEntry = new Pose(47.047, 36.130, Math.toRadians(180));
-    public Pose p_ThirdRowIntake = new Pose(15, 35.610, Math.toRadians(180));
+    public Pose p_FirstRowEntry = new Pose(50, 80, Math.toRadians(180-5));
+    public Pose p_FirstRowIntake = new Pose(20, 80, Math.toRadians(180-5));
+    public Pose p_SecondRowEntry = new Pose(50, 57, Math.toRadians(180));
+    public Pose p_SecondRowIntake = new Pose(17, 57, Math.toRadians(180));
+    public Pose p_ThirdRowEntry = new Pose(50, 36.130, Math.toRadians(180));
+    public Pose p_ThirdRowIntake = new Pose(17, 36.130, Math.toRadians(180));
     public Pose p_Launch = new Pose(64.722, 9.000, Math.toRadians(180));
     public Pose p_Push = new Pose(33.271, 9.877, Math.toRadians(180));
     public Pose p_End = new Pose(61.343, 53.285, Math.toRadians(180));
@@ -58,6 +58,7 @@ public class GoalSidePaths {
         StartToSpin = follower.pathBuilder()
                 .addPath(new BezierLine(p_Start, p_Spin))
                 .setLinearHeadingInterpolation(p_Start.getHeading(), p_Spin.getHeading())
+                .setBrakingStrength(4)
                 .build();
 
         SpinToFirstRow = follower.pathBuilder()

@@ -11,7 +11,7 @@ public class Field {
     private final List<Triangle> obstacles = new ArrayList<>();
 
     public Field() {
-        robotSquare = new Square(2, 2); // 18x18 inches
+        robotSquare = new Square(10, 10); // 18x18 inches
     }
 
     public void addObstacle(Triangle triangle) {

@@ -37,7 +37,12 @@ public class TurretSubsystem extends Subsystem {
 
     private Patterns pattern = null;
     private Pose poseBot = new Pose(0, 0, 0);
-
+    public PIDFController visionPid = new PIDFController(
+            0.03,
+            0,
+            0,
+            0
+    );
     private final PIDFController pidf = new PIDFController(
             TurretConstants.kP,
             TurretConstants.kI,
@@ -46,7 +51,7 @@ public class TurretSubsystem extends Subsystem {
     );
 
     private final Pose poseRedGoal = new Pose(155, 155, 0);
-    private final Pose poseBlueGoal = new Pose(0, 135, 0);
+    private final Pose poseBlueGoal = new Pose(0, 140, 0);
     private final Pose poseMotif = new Pose(70, 140, 0);
 
     public enum GOALS {
@@ -100,8 +105,12 @@ public class TurretSubsystem extends Subsystem {
 
             case MOTIF:
                 tx = getTagError(21);
-                tx = getTagError(22);
-                tx = getTagError(23);
+                if (tx==0) {
+                    tx = getTagError(22);
+                }
+                else if (tx == 0) {
+                    tx = getTagError(23);
+                }
                 target = poseMotif;
                 break;
 
@@ -115,8 +124,8 @@ public class TurretSubsystem extends Subsystem {
 
         distanceToGoal = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
         double angle = Math.toDegrees(Math.atan2(deltaY, deltaX));
-
-        SetAngleFC(angle -tx);
+        visionPid.setSetpoint(angle+tx);
+        SetAngleFC(angle + visionPid.calculate(angle));
     }
 
     private Pose getTurretPose(Pose botPose) {
@@ -167,7 +176,7 @@ public class TurretSubsystem extends Subsystem {
         SetSetPoint(targetTicks);
     }
     private double filteredTx = 0;
-    private static final double txLerpFactor = 0.2; // 0 < fator < 1, menor = mais suave
+    private static final double txLerpFactor = 0.4; // 0 < fator < 1, menor = mais suave
 
     public double getTagError(int tagID) {
         LLResult result = limelight.getLatestResult();

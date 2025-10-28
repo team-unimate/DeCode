@@ -29,15 +29,28 @@ public class MainRobot extends Robot {
     public MainRobot() {
         super(MainRobot.subSystemGroups);
     }
+    Patterns pattern = Patterns.PGP;
+    public void SetPattern(Patterns pattern){
+        this.pattern = pattern;
+    }
 
-
+    public void ForceShootOnPattern(){
+        intakeDexer.ShootPattern(pattern);
+    }
     public void ForceShoot(){
         intakeDexer.SerializeThreeMode();
     }
     public void SetGoal(TurretSubsystem.GOALS goal){
         outtake.SetGoal(goal);
     }
-
+    public enum SHOOTING_MODES{
+        PATTERN,
+        RANDOM
+    }
+    public void setShootingMode(SHOOTING_MODES shootingMode){
+        this.shootingMode = shootingMode;
+    }
+    SHOOTING_MODES shootingMode = SHOOTING_MODES.RANDOM;
     @Override
     public void RobotPeriodic(Telemetry telemetry) {
         intakeDexer.setCanShoot(outtake.canShoot()&& drivetrain.isAtShootingZone());
@@ -56,7 +69,11 @@ public class MainRobot extends Robot {
             }
 
             if (intakeDexer.bals()>=3){
+                if (shootingMode == SHOOTING_MODES.RANDOM) {
                     intakeDexer.SerializeThreeMode();
+                } else {
+                    intakeDexer.ShootPattern(pattern);
+                }
 
             }
         } else {
@@ -66,13 +83,13 @@ public class MainRobot extends Robot {
 
             intakeDexer.IntakeThreeMode();
         }
-        telemetry.addData("INTAKEDEXER STATE: ", intakeDexer.currentState);
-        telemetry.addData("Last tx: ", outtake.turret.lastTxResult);
         telemetry.update();
 
     }
     public boolean isShootingDone() {
-        return intakeDexer.currentState != IntakeDexer.STATES.OUTTAKE_THREE;
+        return intakeDexer.currentState != IntakeDexer.STATES.OUTTAKE_THREE
+                && intakeDexer.currentState != IntakeDexer.STATES.SHOOT_PATTERN;
     }
+
 
 }

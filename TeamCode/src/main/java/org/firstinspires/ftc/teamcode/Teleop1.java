@@ -34,6 +34,11 @@ public class Teleop1 extends LinearOpMode {
         mainRobot.drivetrain.SetPose(startingPose);
 
         while (!isStopRequested()){
+            if (gamepad1.bWasPressed()){
+                mainRobot.SetGoal(TurretSubsystem.GOALS.MOTIF);
+            } else if (gamepad1.yWasPressed()){
+                mainRobot.SetGoal(TurretSubsystem.GOALS.BLUE_GOAL);
+            }
             mainRobot.drivetrain.DriveTeleOp(gamepad1);
             if (gamepad1.aWasPressed()){
                 mainRobot.ForceShoot();

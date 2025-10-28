@@ -56,10 +56,6 @@ public class Outtake extends SubSystemGroup {
 
                 break;
         }
-        telemetry.addData("Turret ok: ", turret.stabilized());
-        telemetry.addData("Shooter ok: ", shooter.isAtSpeed());
-        telemetry.addData("Shooter target speed: ", shooter.targetSpeed());
-        telemetry.addData("Shooter actual speed: ", shooter.currentSpeed());
     }
 
 }

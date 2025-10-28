@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Subsystems.Drivetrain.Drivetrain;
+import org.firstinspires.ftc.teamcode.Subsystems.Intakedexer.IntakeDexer;
 import org.firstinspires.ftc.teamcode.Subsystems.Outtake.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Outtake.TurretSubsystem;
 
@@ -17,6 +19,8 @@ public class TurretConfigurationFile extends LinearOpMode {
     Drivetrain dt = new Drivetrain();
     ShooterSubsystem sh = new ShooterSubsystem();
     TurretSubsystem tu = new TurretSubsystem();
+    IntakeDexer intakeDexer = new IntakeDexer();
+    public static int velocity = 0;
     public static double kP = 0.0;
     @Override
     public void runOpMode() throws InterruptedException {
@@ -29,25 +33,28 @@ public class TurretConfigurationFile extends LinearOpMode {
 
         ArrayList<Double> distances = new ArrayList<>();
         ArrayList<Double> velocities = new ArrayList<>();
-        double velocity = 0.0;
-
+        intakeDexer.InitSubsystems(hardwareMap, telemetry);
+        intakeDexer.AlternateMode();
+        intakeDexer.setCanShoot(true);
+        telemetry = FtcDashboard.getInstance().getTelemetry();
         waitForStart();
 
         while (!isStopRequested()) {
+
+            intakeDexer.Periodic(telemetry);
             dt.Periodic(telemetry);
-            dt.DriveTeleOp(gamepad1);
             sh.Periodic();
+
             tu.AimTo(TurretSubsystem.GOALS.BLUE_GOAL, dt.getFollower().getPose());
 
             tu.Periodic();
 
-            velocity += gamepad1.left_stick_y * 0.1;
             sh.setTargetVelocity(velocity);
             sh.velocityPID.SetP(kP);
             if (gamepad1.aWasPressed()) {
                 double dist = tu.GetDistanceToGoal();
                 distances.add(dist);
-                velocities.add(velocity);
+                velocities.add((double)velocity);
             }
             telemetry.addData("Actual Velocity: ", sh.currentSpeed());
             telemetry.addData("Target Velocity", velocity);

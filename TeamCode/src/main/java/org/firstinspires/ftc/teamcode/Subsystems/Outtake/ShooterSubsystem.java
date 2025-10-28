@@ -16,20 +16,27 @@ public class ShooterSubsystem extends Subsystem {
     public VelocityPIDf velocityPID;
     VoltageSensor voltageSensor;
     InterpLUT lut = new InterpLUT();
+    double mindist = 55.4;
+    double maxdist = 107;
     public ShooterSubsystem(){
-
-        lut.add(58, 890);
-        lut.add(145, 1200);
+        lut.add(mindist, 900.00);
+        lut.add(92.23, 1025.00);
+        lut.add(maxdist, 1100.00);
         lut.createLUT();
 
     }
 
-    private double speedTolerance = 30; // RPM tolerância para "está na velocidade"
+    private double speedTolerance = 20; // RPM tolerância para "está na velocidade"
     private boolean isAtSpeed = false;
     private double map(double x, double inMin, double inMax, double outMin, double outMax) {
         return (x - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
     }
     public void AutoSetVelocity(double distance){
+        if (distance<mindist){
+            distance = mindist+1;
+        } else if (distance>maxdist){
+            distance = maxdist-1;
+        }
         setTargetVelocity(lut.get(distance));
     }
 
