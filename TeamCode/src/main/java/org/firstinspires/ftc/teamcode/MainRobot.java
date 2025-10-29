@@ -29,34 +29,42 @@ public class MainRobot extends Robot {
     public MainRobot() {
         super(MainRobot.subSystemGroups);
     }
-    Patterns pattern = Patterns.PGP;
+
     public void SetPattern(Patterns pattern){
-        this.pattern = pattern;
+        intakeDexer.SetPattern(pattern);
     }
 
-    public void ForceShootOnPattern(){
-        intakeDexer.ShootPattern(pattern);
-    }
+
     public void ForceShoot(){
-        intakeDexer.SerializeThreeMode();
+        intakeDexer.SerializeThreeMode(shootingMode);
     }
     public void SetGoal(TurretSubsystem.GOALS goal){
         outtake.SetGoal(goal);
     }
-    public enum SHOOTING_MODES{
-        PATTERN,
-        RANDOM
-    }
-    public void setShootingMode(SHOOTING_MODES shootingMode){
+
+    public void setShootingMode(IntakeDexer.SHOOTING_MODES shootingMode){
         this.shootingMode = shootingMode;
+
     }
-    SHOOTING_MODES shootingMode = SHOOTING_MODES.RANDOM;
+
+    IntakeDexer.SHOOTING_MODES shootingMode = IntakeDexer.SHOOTING_MODES.RANDOM;
+    private boolean AutoShooting = false;
+    public void SetAutoShooting(boolean AutoShooting){
+        this.AutoShooting = AutoShooting;
+    }
     @Override
     public void RobotPeriodic(Telemetry telemetry) {
         intakeDexer.setCanShoot(outtake.canShoot()&& drivetrain.isAtShootingZone());
         outtake.SetPose(drivetrain.getFollower().getPose());
 
+
         outtake.TurnFlywheelOn();
+
+        if (outtake.getPattern()!=null){
+            intakeDexer.SetPattern(outtake.getPattern());
+        }
+
+
         if (intakeDexer.currentState!= IntakeDexer.STATES.ALTERNATE) {
         //    intakeDexer.AlternateMode();
         }
@@ -68,27 +76,25 @@ public class MainRobot extends Robot {
                 drivetrain.SetTeleOpState(Drivetrain.TELEOP_STATES.NORMAL);
             }
 
-            if (intakeDexer.bals()>=3){
-                if (shootingMode == SHOOTING_MODES.RANDOM) {
-                    intakeDexer.SerializeThreeMode();
-                } else {
-                    intakeDexer.ShootPattern(pattern);
-                }
 
-            }
         } else {
             drivetrain.SetTeleOpState(Drivetrain.TELEOP_STATES.NORMAL);
         }
-        if (intakeDexer.bals()==0){
+        if (intakeDexer.bals()>=3){
+            intakeDexer.SerializeThreeMode(shootingMode);
 
+        } else {
             intakeDexer.IntakeThreeMode();
         }
+        telemetry.addData("SHooting mode do mainrobot: ", shootingMode);
+        telemetry.addData("MOTIF: ", outtake.getPattern());
+        telemetry.addData("PATTERNINDEX: ", intakeDexer.patternIndex);
+        telemetry.addData("STATE DO SPINDEXR: ", intakeDexer.currentState);
         telemetry.update();
 
     }
     public boolean isShootingDone() {
-        return intakeDexer.currentState != IntakeDexer.STATES.OUTTAKE_THREE
-                && intakeDexer.currentState != IntakeDexer.STATES.SHOOT_PATTERN;
+        return intakeDexer.currentState != IntakeDexer.STATES.OUTTAKE_THREE;
     }
 
 

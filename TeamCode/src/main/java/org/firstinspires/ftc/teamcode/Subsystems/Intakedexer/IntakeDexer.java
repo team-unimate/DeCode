@@ -7,11 +7,9 @@ import org.firstinspires.ftc.teamcode.core.lib.SubSystemGroup;
 import org.firstinspires.ftc.teamcode.core.lib.Subsystem;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class IntakeDexer extends SubSystemGroup {
-    public LinkedList<ArtifactSensor.ARTIFACT_STATE> artifacts = new LinkedList<>();
 
     IntakeSubsystem intake;
     SpindexerSubsystem spindexer;
@@ -19,6 +17,8 @@ public class IntakeDexer extends SubSystemGroup {
     ArtifactSensor sensorOuttake;
     SerializerSubsystem serializer;
     boolean canShoot = false;
+
+
 
     public IntakeDexer() {
         intake = new IntakeSubsystem();
@@ -37,7 +37,8 @@ public class IntakeDexer extends SubSystemGroup {
     }
 
     public void Reset() {
-        IntakeThreeMode();
+        balCount = 3;
+
         spindexer.Reset();
     }
 
@@ -45,8 +46,7 @@ public class IntakeDexer extends SubSystemGroup {
         IDLE,
         INTAKE_THREE,
         OUTTAKE_THREE,
-        ALTERNATE,
-        SHOOT_PATTERN
+        ALTERNATE
     }
 
     public boolean CanSerialize() {
@@ -82,23 +82,28 @@ public class IntakeDexer extends SubSystemGroup {
     }
 
     public void IntakeThreeMode() {
-        artifacts.clear();
         if (currentState == STATES.IDLE) {
             InOutCount = 1;
             SetState(STATES.INTAKE_THREE);
-            SpinAndReorder(SpindexerSubsystem.POSITIONS.INTAKE);
+            if (spindexer.GetCurrentPosition()!= SpindexerSubsystem.POSITIONS.INTAKE) {
+                spindexer.Spin(SpindexerSubsystem.POSITIONS.INTAKE, 1);
+            }
         }
     }
 
     int SerializedAt = 0;
 
-    public void SerializeThreeMode() {
+    public void SerializeThreeMode(SHOOTING_MODES mode) {
         balCount = 3;
-        artifacts.clear();
         if (currentState != STATES.OUTTAKE_THREE) {
+            currentShootingMode = mode;
+            patternIndex = 1;
             InOutCount = 1;
+            if (spindexer.GetCurrentPosition()!= SpindexerSubsystem.POSITIONS.OUTTAKE) {
+                spindexer.Spin(SpindexerSubsystem.POSITIONS.OUTTAKE, 1);
+            }
             SetState(STATES.OUTTAKE_THREE);
-            SpinAndReorder(SpindexerSubsystem.POSITIONS.OUTTAKE);
+
             SerializedAt = 0;
         }
     }
@@ -111,40 +116,32 @@ public class IntakeDexer extends SubSystemGroup {
 
     boolean serialized = false;
 
-    Patterns currentPattern = null;
-    int patternIndex = 0;
+    public Patterns currentPattern =Patterns.PGP;
+    public void SetPattern(Patterns pattern){
+        currentPattern = pattern;
+    }
+    public int patternIndex = 1;
     boolean ignorePattern = false;
-    public void ShootPattern(Patterns pattern) {
-        if (currentState!=STATES.SHOOT_PATTERN) {
-            currentPattern = pattern;
-            patternIndex = 0;
-            balCount = 3;
-            InOutCount = 1;
-            patternAttempts = 0;
-            SetState(STATES.SHOOT_PATTERN);
-            ignorePattern = false;
 
-            spindexer.Spin(SpindexerSubsystem.POSITIONS.OUTTAKE, 1);
-        }
-        }
-
-
+    public ArtifactSensor.ARTIFACT_STATE slot1 = ArtifactSensor.ARTIFACT_STATE.NONE;
+    public ArtifactSensor.ARTIFACT_STATE slot2 = ArtifactSensor.ARTIFACT_STATE.NONE;
+    public ArtifactSensor.ARTIFACT_STATE slot3 = ArtifactSensor.ARTIFACT_STATE.NONE;
     private ArtifactSensor.ARTIFACT_STATE GetPatternColor(Patterns pattern, int index) {
         switch (pattern) {
             case PGP:
-                if (index == 0) return ArtifactSensor.ARTIFACT_STATE.PURPLE;
-                if (index == 1) return ArtifactSensor.ARTIFACT_STATE.GREEN;
-                if (index == 2) return ArtifactSensor.ARTIFACT_STATE.PURPLE;
-                break;
-            case PPG:
-                if (index == 0) return ArtifactSensor.ARTIFACT_STATE.PURPLE;
                 if (index == 1) return ArtifactSensor.ARTIFACT_STATE.PURPLE;
                 if (index == 2) return ArtifactSensor.ARTIFACT_STATE.GREEN;
+                if (index == 3) return ArtifactSensor.ARTIFACT_STATE.PURPLE;
                 break;
-            case GPP:
-                if (index == 0) return ArtifactSensor.ARTIFACT_STATE.GREEN;
+            case PPG:
                 if (index == 1) return ArtifactSensor.ARTIFACT_STATE.PURPLE;
                 if (index == 2) return ArtifactSensor.ARTIFACT_STATE.PURPLE;
+                if (index == 3) return ArtifactSensor.ARTIFACT_STATE.GREEN;
+                break;
+            case GPP:
+                if (index == 1) return ArtifactSensor.ARTIFACT_STATE.GREEN;
+                if (index == 2) return ArtifactSensor.ARTIFACT_STATE.PURPLE;
+                if (index == 3) return ArtifactSensor.ARTIFACT_STATE.PURPLE;
                 break;
             default:
                 break;
@@ -153,63 +150,133 @@ public class IntakeDexer extends SubSystemGroup {
     }
 
     public void SetInitialArtifacts(ArtifactSensor.ARTIFACT_STATE first, ArtifactSensor.ARTIFACT_STATE second, ArtifactSensor.ARTIFACT_STATE third) {
-        artifacts.clear();
-        artifacts.add(first);
-        artifacts.add(second);
-        artifacts.add(third);
+
         balCount = 3;
     }
 
     private void SpinAndReorder(SpindexerSubsystem.POSITIONS position) {
         spindexer.Spin(position, 1);
-        if (!artifacts.isEmpty()) {
-            ArtifactSensor.ARTIFACT_STATE top = artifacts.removeLast();
-            artifacts.addFirst(top);
-        }
+        ArtifactSensor.ARTIFACT_STATE s1 = slot1;
+        ArtifactSensor.ARTIFACT_STATE s2 = slot2;
+        ArtifactSensor.ARTIFACT_STATE s3 = slot3;
+        slot1 = s3;
+        slot2 = s1;
+        slot3 = s2;
+    }
+    public void IndexBallFromSlot(int slot){
+
+
+            switch (slot){
+                case 1:
+                    SpinAndReorder(SpindexerSubsystem.POSITIONS.OUTTAKE);
+                    break;
+                case 2:
+                    SpinAndReorder(SpindexerSubsystem.POSITIONS.OUTTAKE);
+                    SpinAndReorder(SpindexerSubsystem.POSITIONS.OUTTAKE);
+                    break;
+                case 3:
+                    SpinAndReorder(SpindexerSubsystem.POSITIONS.OUTTAKE);
+                    SpinAndReorder(SpindexerSubsystem.POSITIONS.OUTTAKE);
+                    SpinAndReorder(SpindexerSubsystem.POSITIONS.OUTTAKE);
+                    break;
+            }
     }
 
+    public enum SHOOTING_MODES{
+        PATTERN,
+        RANDOM
+    }
+    SHOOTING_MODES currentShootingMode = SHOOTING_MODES.RANDOM;
 
-
-    private int patternAttempts = 0;      // quantas vezes girou tentando achar a bola correta
-    private boolean waitingForBall = false; // indica se estamos aguardando sensor
-    private boolean ballFound = false;      // indica se a bola correta foi encontrada
-    private long waitStartTime = 0;
-
-
+    public int GetSlotFromBall(ArtifactSensor.ARTIFACT_STATE ball){
+        if (slot1==ball){
+            return 1;
+        } else if (slot2==ball){
+            return 2;
+        }else if (slot3==ball){
+            return 3;
+        }
+        return -1;
+    }
+    public void SetSlotState(int slot, ArtifactSensor.ARTIFACT_STATE ball){
+        if (slot==1){
+            slot1 = ball;
+        } else if (slot==2){
+            slot2 = ball;
+        }else if (slot==3){
+            slot3 = ball;
+        }
+    }
+    int slotIndex =1;
     @Override
     public void GroupPeriodic(Telemetry telemetry) {
         switch (currentState) {
             case INTAKE_THREE:
-                intake.TurnIntakeOn();
-                if (InOutCount <= 3) {
-                    if (!spindexer.IsSpinning()) {
+
+                    intake.TurnIntakeOn();
+                    if (InOutCount <= 3) {
                         ArtifactSensor.ARTIFACT_STATE newBall = sensorIntake.GetArtifact();
-                        if (newBall != ArtifactSensor.ARTIFACT_STATE.NONE) {
-                            artifacts.add(newBall);
+                        if (!spindexer.IsSpinning() && newBall!= ArtifactSensor.ARTIFACT_STATE.NONE) {
                             balCount++;
+                            slot1 = newBall;
                             SpinAndReorder(SpindexerSubsystem.POSITIONS.INTAKE);
                             InOutCount++;
                         }
+                    } else {
+                        SetState(STATES.IDLE);
                     }
-                } else {
-                    SetState(STATES.IDLE);
-                }
+
                 break;
 
             case OUTTAKE_THREE:
-                if (InOutCount <= 3) {
-                    if (SerializedAt < InOutCount) {
-                        if (!spindexer.IsSpinning() && !serializer.serializing && canShoot) {
-                            serializer.Serialize();
-                            SerializedAt++;
+                if (currentShootingMode==SHOOTING_MODES.RANDOM) {
+                    if (InOutCount <= 3) {
+                        if (SerializedAt < InOutCount) {
+                            if (!spindexer.IsSpinning() && !serializer.serializing && canShoot) {
+                                serializer.Serialize();
+
+                                SerializedAt++;
+                            }
+                        } else if (!serializer.serializing && !spindexer.IsSpinning()) {
+                            SpinAndReorder(SpindexerSubsystem.POSITIONS.OUTTAKE);
+
+                            InOutCount++;
                         }
-                    } else if (!serializer.serializing && !spindexer.IsSpinning()) {
-                        SpinAndReorder(SpindexerSubsystem.POSITIONS.OUTTAKE);
-                        InOutCount++;
+                    } else {
+                        balCount = 0;
+                        SetState(STATES.IDLE);
                     }
                 } else {
-                    balCount = 0;
-                    SetState(STATES.IDLE);
+                    if (InOutCount <= 3) {
+                        if (SerializedAt < InOutCount) {
+                            if (!spindexer.IsSpinning() && !serializer.serializing && canShoot) {
+
+                                serializer.Serialize();
+                                SetSlotState(2  , ArtifactSensor.ARTIFACT_STATE.NONE);
+                                SerializedAt++;
+                            }
+                        } else if (!serializer.serializing && !spindexer.IsSpinning()) {
+                            ArtifactSensor.ARTIFACT_STATE nextBallColor = GetPatternColor(currentPattern, patternIndex);
+                            slotIndex = GetSlotFromBall(nextBallColor);
+
+                            if (slotIndex == -1) {
+                                currentShootingMode=SHOOTING_MODES.RANDOM;
+                                return;
+                            } else {
+
+                                IndexBallFromSlot(slotIndex);
+
+                            }
+
+                            patternIndex++;
+                            if (patternIndex > 3) patternIndex = 1;
+
+                            InOutCount++;
+                        }
+                    } else {
+                        balCount = 0;
+                        SetState(STATES.IDLE);
+                    }
                 }
                 break;
 
@@ -219,71 +286,39 @@ public class IntakeDexer extends SubSystemGroup {
                         sensorIntake.GetArtifact() != ArtifactSensor.ARTIFACT_STATE.NONE) {
                     serialized = false;
                     SpinAndReorder(SpindexerSubsystem.POSITIONS.OUTTAKE);
+                    
                     alternateState = ALTERNATE_STATES.OUTTAKE;
                 } else if (alternateState == ALTERNATE_STATES.OUTTAKE && !spindexer.IsSpinning()) {
                     if (!serialized && canShoot) {
                         serializer.Serialize();
+
                         serialized = true;
                     }
                     if (serialized && !serializer.serializing) {
                         alternateState = ALTERNATE_STATES.INTAKE;
                         SpinAndReorder(SpindexerSubsystem.POSITIONS.INTAKE);
+                        
                     }
                 }
                 break;
-
-            case SHOOT_PATTERN:
-                if (InOutCount <= 3) {
-                    if (SerializedAt < InOutCount) {
-                        if (!spindexer.IsSpinning() && !serializer.serializing && canShoot) {
-
-                            if (ignorePattern) {
-                                serializer.Serialize();
-                                SerializedAt++;
-                            } else {
-                                if (!waitingForBall) {
-                                    waitStartTime = System.currentTimeMillis();
-                                    waitingForBall = true;
-                                } else if (System.currentTimeMillis() - waitStartTime >= 50) {
-                                    ArtifactSensor.ARTIFACT_STATE detected = sensorOuttake.GetArtifact();
-                                    if (detected == GetPatternColor(currentPattern, patternIndex)) {
-                                        patternIndex++;
-                                        serializer.Serialize();
-                                        SerializedAt++;
-                                    } else {
-                                        // bola errada, pular para a próxima
-                                        patternAttempts++;
-                                        SpinAndReorder(SpindexerSubsystem.POSITIONS.OUTTAKE); // gira para a próxima bola
-                                    }
-                                    waitingForBall = false; // reseta espera para a próxima bola
-                                }
-
-                            }
-
-                        }
-                    } else if (!serializer.serializing && !spindexer.IsSpinning()) {
-                        SpinAndReorder(SpindexerSubsystem.POSITIONS.OUTTAKE);
-                        InOutCount++;
-                    }
-                } else {
-                    balCount = 0;
-                    SetState(STATES.IDLE);
-                }
-                break;
-
-
             case IDLE:
                 break;
         }
-        telemetry.addData("GOALBALL: ", GetPatternColor(Patterns.PGP, patternIndex));
-        telemetry.addData("OUTTAKE SENSOR: ", sensorOuttake.GetArtifact());
+        telemetry.addData("Ballcount: ", bals());
+        telemetry.addData("Ball1: ", slot1);
+        telemetry.addData("Ball2: ", slot2);
+        telemetry.addData("Ball3: ", slot3);
+        telemetry.addData("GOAL BALL: ", GetPatternColor(currentPattern, patternIndex));
+        telemetry.addData("State: ", currentState);
+        telemetry.addData("Shooting mode: ", currentShootingMode);
         intake.TurnIntakeOn();
-        telemetry.addData("BALLS: ", artifacts);
     }
 
     public void ForceIndexNextBall() {
         serialized = false;
+
         SpinAndReorder(SpindexerSubsystem.POSITIONS.OUTTAKE);
+        
         alternateState = ALTERNATE_STATES.OUTTAKE;
     }
 
@@ -294,4 +329,5 @@ public class IntakeDexer extends SubSystemGroup {
     public double currentServo() {
         return serializer.s1.getPosition();
     }
+
 }

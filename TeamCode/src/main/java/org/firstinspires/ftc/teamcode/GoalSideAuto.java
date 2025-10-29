@@ -8,7 +8,9 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.Subsystems.Drivetrain.Paths.GoalSidePaths;
 import org.firstinspires.ftc.teamcode.Subsystems.Drivetrain.Paths.SIDES;
 import org.firstinspires.ftc.teamcode.Subsystems.Intakedexer.IntakeDexer;
+import org.firstinspires.ftc.teamcode.Subsystems.Intakedexer.Sensoring.ArtifactSensor;
 import org.firstinspires.ftc.teamcode.Subsystems.Outtake.TurretSubsystem;
+import org.firstinspires.ftc.teamcode.core.lib.StateMachine.Action;
 
 @Autonomous(name = "Goal Side Auto", group = "Main")
 public class GoalSideAuto extends OpMode {
@@ -40,22 +42,28 @@ public class GoalSideAuto extends OpMode {
 
     @Override
     public void init() {
+        mainRobot.setShootingMode(IntakeDexer.SHOOTING_MODES.RANDOM);
         mainRobot.Init(hardwareMap, telemetry);
         follower = mainRobot.drivetrain.getFollower();
         goalSidePaths = new GoalSidePaths(follower, SIDES.BLUE);
 
         follower.setPose(goalSidePaths.p_Start);
 
-        mainRobot.SetGoal(TurretSubsystem.GOALS.BLUE_GOAL);
+        //mainRobot.SetGoal(TurretSubsystem.GOALS.BLUE_GOAL);
         mainRobot.intakeDexer.Reset();
+        mainRobot.setShootingMode(IntakeDexer.SHOOTING_MODES.PATTERN);
+        mainRobot.SetPattern(Patterns.GPP);
+        mainRobot.intakeDexer.SetSlotState(1, ArtifactSensor.ARTIFACT_STATE.GREEN);
+        mainRobot.intakeDexer.SetSlotState(2, ArtifactSensor.ARTIFACT_STATE.PURPLE);
+        mainRobot.intakeDexer.SetSlotState(3, ArtifactSensor.ARTIFACT_STATE.PURPLE);
+
         mainRobot.outtake.Reset();
 
-        telemetry.addLine("Status: Initialized");
-        telemetry.update();
     }
 
     @Override
     public void start() {
+        mainRobot.SetGoal(TurretSubsystem.GOALS.MOTIF);
         follower.followPath(goalSidePaths.StartToSpin);
         resetStateTimer();
     }
@@ -63,6 +71,9 @@ public class GoalSideAuto extends OpMode {
     @Override
     public void loop() {
         mainRobot.Periodic(telemetry);
+        if (mainRobot.intakeDexer.currentPattern!=null){
+        }
+
 
         switch (currentState) {
 
@@ -156,11 +167,6 @@ public class GoalSideAuto extends OpMode {
                 break;
         }
 
-        telemetry.addData("Current State", currentState);
-        telemetry.addData("Follower busy", follower.isBusy());
-        telemetry.addData("Shooting Done", mainRobot.isShootingDone());
-        telemetry.addData("State Time (s)", timeSinceStateStart());
-        telemetry.update();
     }
 
     /**
@@ -169,15 +175,20 @@ public class GoalSideAuto extends OpMode {
      * @param nextState próximo estado após disparar
      * @return true se o disparo está em andamento ou acabou de ser completado (para evitar duplo avanço)
      */
-    private boolean handleShootAndContinue(PathChain nextPath, AutoState nextState)
-    { double timeout = 8.0; // segurança: se algo travar por mais de 5s, continua mesmo assim
 
-        // Disparar uma vez
-         if (!calledForceShoot && !follower.isBusy()) { mainRobot.ForceShoot();
+    private boolean handleShootAndContinue(PathChain nextPath, AutoState nextState)
+    { double timeout = 7;
+
+         if (!calledForceShoot && !follower.isBusy()) {
+
+                 mainRobot.ForceShoot();
+                 calledForceShoot = true;
+
+             mainRobot.SetGoal(TurretSubsystem.GOALS.BLUE_GOAL);
+
              calledForceShoot = true;
              resetStateTimer();
              return true; }
-         // Esperar disparo terminar
             if (calledForceShoot && (mainRobot.isShootingDone() || timeSinceStateStart() > timeout)) {
                 follower.followPath(nextPath);
                 setState(nextState);

@@ -28,8 +28,8 @@ public class GoalSidePaths {
     public Pose p_Spin = new Pose(61.603, 86.296, Math.toRadians(-90));
     public Pose p_FirstRowEntry = new Pose(50, 80, Math.toRadians(180-5));
     public Pose p_FirstRowIntake = new Pose(20, 80, Math.toRadians(180-5));
-    public Pose p_SecondRowEntry = new Pose(50, 57, Math.toRadians(180));
-    public Pose p_SecondRowIntake = new Pose(17, 57, Math.toRadians(180));
+    public Pose p_SecondRowEntry = new Pose(50, 60, Math.toRadians(180));
+    public Pose p_SecondRowIntake = new Pose(17, 60, Math.toRadians(180));
     public Pose p_ThirdRowEntry = new Pose(50, 36.130, Math.toRadians(180));
     public Pose p_ThirdRowIntake = new Pose(17, 36.130, Math.toRadians(180));
     public Pose p_Launch = new Pose(64.722, 9.000, Math.toRadians(180));

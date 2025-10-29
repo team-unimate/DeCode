@@ -90,6 +90,8 @@ public class SpindexerSubsystem extends Subsystem {
         }
 
         currentPosition = position;
+
+
     }
 
     @Override

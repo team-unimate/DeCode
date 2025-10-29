@@ -7,7 +7,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Subsystems.Drivetrain.Drivetrain;
 import org.firstinspires.ftc.teamcode.Subsystems.Intakedexer.IntakeDexer;
+import org.firstinspires.ftc.teamcode.Subsystems.Intakedexer.IntakeDexer;
 
+import org.firstinspires.ftc.teamcode.Subsystems.Intakedexer.Sensoring.ArtifactSensor;
 import org.firstinspires.ftc.teamcode.Subsystems.Outtake.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -32,6 +34,8 @@ public class Teleop1 extends LinearOpMode {
         mainRobot.outtake.Reset();
         mainRobot.drivetrain.StartTeleOpDrive();
         mainRobot.drivetrain.SetPose(startingPose);
+        mainRobot.SetPattern(Patterns.PGP);
+        mainRobot.setShootingMode(IntakeDexer.SHOOTING_MODES.PATTERN);
 
         while (!isStopRequested()){
             if (gamepad1.bWasPressed()){
@@ -43,16 +47,19 @@ public class Teleop1 extends LinearOpMode {
             if (gamepad1.aWasPressed()){
                 mainRobot.ForceShoot();
             }
-            if (gamepad1.dpadLeftWasPressed()){
-                mainRobot.drivetrain.AutoPark(Drivetrain.PARKS.RED_PARK);
+            if (gamepad1.leftBumperWasPressed()){
+                mainRobot.intakeDexer.IndexBallFromSlot(1);
+
+            } else if (gamepad1.dpadUpWasPressed()){
+                mainRobot.intakeDexer.IndexBallFromSlot(2);
+
+            } else if (gamepad1.rightBumperWasPressed()){
+                mainRobot.intakeDexer.IndexBallFromSlot(3);
+
             }
-            if (gamepad1.dpadRightWasPressed()){
-                mainRobot.drivetrain.AutoPark(Drivetrain.PARKS.BLUE_PARK);
-            }
-            if (gamepad1.dpadUpWasPressed()){
-                mainRobot.drivetrain.StartTeleOpDrive();
-            }
+
             mainRobot.Periodic(telemetry);
+
         }
     }
 }

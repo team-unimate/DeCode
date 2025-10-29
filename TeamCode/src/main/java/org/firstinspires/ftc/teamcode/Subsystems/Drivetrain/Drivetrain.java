@@ -42,10 +42,6 @@ public class Drivetrain extends SubSystemGroup {
 
         AtShootingZone = field.checkCollision();
 
-            limelightLocalizer.SetPose(currentPose);
-            if (limelightLocalizer.GetPoseByVision()!=null) {
-                telemetry.addData("AprilTagPose: ", limelightLocalizer.GetPoseByVision());
-            }
             }
 
 

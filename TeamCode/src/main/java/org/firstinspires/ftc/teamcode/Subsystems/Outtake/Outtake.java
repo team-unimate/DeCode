@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.Subsystems.Outtake;
 import com.pedropathing.geometry.Pose;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.Patterns;
 import org.firstinspires.ftc.teamcode.core.lib.SubSystemGroup;
 import org.firstinspires.ftc.teamcode.core.lib.Subsystem;
 
@@ -16,6 +17,9 @@ public class Outtake extends SubSystemGroup {
                 turret, shooter
         };
         scheduleSubsystems(subsystems);
+    }
+    public Patterns getPattern(){
+        return turret.getPattern();
     }
     public boolean canShoot(){
         return shooter.isAtSpeed()&&turret.stabilized();
